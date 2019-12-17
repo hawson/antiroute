@@ -7,14 +7,22 @@ import logging
 import os
 
 
+
+def unique(L):
+    LS=set(L)
+    return list(LS)
+
+
+
 def parse_file(filename):
+    '''read list subnet list from a file'''
 
-    L = []
+    rawlist = []
     with open(filename, 'r') as fp:
-        L = fp.readlines()
+        rawlist = fp.readlines()
 
-    logging.debug("Read %d elements form %s: %s", len(L), filename, L)
-    return list(map(lambda x: x.strip(), L))
+    logging.debug("Read %d elements form %s", len(rawlist), filename)
+    return list(map(lambda x: x.strip(), rawlist))
 
 
 
@@ -51,34 +59,45 @@ def parse_exclusions(arguments):
 
 
 
+
 def exclude_networks(supernet, exclusions):
 
-    networks = [supernet]
-    all_networks = [ supernet ]
+    all_networks = []
+    networks = []
 
-    logging.debug("Starting with %s", networks)
+    logging.debug("Starting with %s", supernet)
 
 
     for exclusion in exclusions:
 
-        networks = all_networks
+        logging.debug("Exclusion %s ", exclusion)
+        all_networks = unique(all_networks)
 
-        for network in networks:
-            logging.debug("excluding %s from %s", exclusions, network)
+        if all_networks:
+            networks = all_networks
+        else:
+            networks = [supernet]
+
+        for network in sorted(networks):
+
+            logging.debug("  Checking if %s is within %s", exclusion, network)
+
+            if exclusion == network:
+                logging.debug("  networks match %s %s", exclusion, network)
+                all_networks.remove(exclusion)
+                continue
 
             if exclusion.subnet_of(network):
 
+                logging.debug("    excluding %s from %s", exclusion, network)
+
                 new_nets = list(network.address_exclude(exclusion))
-
-                logging.debug("  added: %s", new_nets)
-
                 all_networks.extend(new_nets)
-                logging.debug("  all: %s", all_networks)
+                logging.debug("    added: %s", new_nets)
 
 
-
-
-    return all_networks
+    logging.debug("  final all: %s", all_networks)
+    return unique(all_networks)
 
 
 
@@ -115,6 +134,7 @@ Error parsing arguments.
 
     try:
         supernet = ipaddress.ip_network(parsed_options.supernet)
+
     except ValueError:
         logging.error("Invalid supernet passed: %s", parsed_options.supernet)
         sys.exit(1)
@@ -127,5 +147,7 @@ Error parsing arguments.
 
     final_networks = exclude_networks(supernet, exclusions)
 
-    for net in final_networks:
+    for net in sorted(final_networks):
         print(net)
+
+    sys.exit(0)

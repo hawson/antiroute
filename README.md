@@ -5,6 +5,8 @@ Given a list of subnets, generate a list of all the *other* subnets
 Examples:
 
 # Everything that isn't a private network (see RFC1918)
+
+```
 > cat rfc1918.txt
 10.0.0.0/8
 172.16.0.0/12
@@ -45,10 +47,11 @@ Examples:
 200.0.0.0/5
 208.0.0.0/4
 224.0.0.0/3
-
+```
 
 
 # Everything not localhost
+```
 > ./ipnet-exclude.py 127.0.0.1
 0.0.0.0/2
 64.0.0.0/3
@@ -82,9 +85,10 @@ Examples:
 127.64.0.0/10
 127.128.0.0/9
 128.0.0.0/1
+```
 
-
-# Block Amazon in Southeast Asia
+# Block part of Amazon
+```
 > ./ipnet-exclude.py  3.0.0.0/8
 0.0.0.0/7
 2.0.0.0/8
@@ -94,4 +98,4 @@ Examples:
 32.0.0.0/3
 64.0.0.0/2
 128.0.0.0/1
-
+```

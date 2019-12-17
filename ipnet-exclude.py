@@ -74,11 +74,11 @@ def exclude_networks(supernet, exclusions):
         all_networks = unique(all_networks)
 
         if all_networks:
-            networks = all_networks
+            networks = sorted(all_networks)
         else:
             networks = [supernet]
 
-        for network in sorted(networks):
+        for network in networks:
 
             logging.debug("  Checking if %s is within %s", exclusion, network)
 

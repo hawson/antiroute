@@ -7,6 +7,14 @@ import logging
 import os
 
 
+try:
+    assert sys.version_info >= (3, 7)
+
+except AssertionError:
+    print("This script requires Python >= 3.7 (for features in ipaddress)")
+    sys.exit(1)
+
+
 
 def unique(L):
     LS=set(L)

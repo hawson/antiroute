@@ -62,29 +62,24 @@ def parse_exclusions(arguments):
 
 def exclude_networks(supernet, exclusions):
 
-    all_networks = []
-    networks = []
+    networks = [supernet]
 
     logging.debug("Starting with %s", supernet)
 
 
+    # Loop over the holes we want to punch
     for exclusion in exclusions:
 
         logging.debug("Exclusion %s ", exclusion)
-        all_networks = unique(all_networks)
 
-        if all_networks:
-            networks = sorted(all_networks)
-        else:
-            networks = [supernet]
-
+        # loop over the chunks of the IP space that are still left
         for network in networks:
 
             logging.debug("  Checking if %s is within %s", exclusion, network)
 
             if exclusion == network:
-                logging.debug("  networks match %s %s", exclusion, network)
-                all_networks.remove(exclusion)
+                logging.debug("  exclusion %s exactly matches chunk %s", exclusion, network)
+                networks.remove(exclusion)
                 continue
 
             if exclusion.subnet_of(network):
@@ -92,12 +87,16 @@ def exclude_networks(supernet, exclusions):
                 logging.debug("    excluding %s from %s", exclusion, network)
 
                 new_nets = list(network.address_exclude(exclusion))
-                all_networks.extend(new_nets)
+
+                networks.remove(network)
+
+                networks.extend(new_nets)
                 logging.debug("    added: %s", new_nets)
+                continue
 
 
-    logging.debug("  final all: %s", all_networks)
-    return unique(all_networks)
+    logging.debug("  final networks: %s", networks)
+    return unique(networks)
 
 
 

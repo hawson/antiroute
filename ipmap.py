@@ -3,17 +3,24 @@
 
 import logging
 import sys
-import hilbert
 import argparse
 import subprocess
 import ipaddress
+import re
+import os
 
-
+import hilbert
 
 def ping_subnet(subnet):
 
-    base_cmd = '/usr/bin/fping -a -q -i 10 -r 1 -g'
+    if os.path.exists('/usr/sbin/fping'):
+        fping = '/usr/sbin/fping'
+    else:
+        fping = '/usr/bin/fping'
+
+    base_cmd = fping + ' -a -q -i 10 -r 1 -g'
     cmd = base_cmd.split() + [subnet]
+    logging.info("fping command=%s", cmd)
     output = subprocess.run(cmd, stdout=subprocess.PIPE, check=False, encoding='utf-8').stdout.split('\n')
 
     return output

@@ -23,7 +23,11 @@ def ping_subnet(subnet):
     logging.info("fping command=%s", cmd)
     output = subprocess.run(cmd, stdout=subprocess.PIPE, check=False, encoding='utf-8').stdout.split('\n')
 
-    return output
+    new_output = []
+    for ip in output:
+        new_output.append(re.sub(' .*$', '', ip))
+
+    return new_output
 
 
 

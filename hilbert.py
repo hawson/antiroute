@@ -116,7 +116,7 @@ class Hilbert(object):
 
     def print(self):
 
-        print(self.curve)
+        #print(self.curve)
         for row in self.curve:
             #for col in row:
 

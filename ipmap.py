@@ -12,7 +12,7 @@ import ipaddress
 
 def ping_subnet(subnet):
 
-    base_cmd = '/usr/bin/fping -a -q -i 2 -r 1 -g'
+    base_cmd = '/usr/bin/fping -a -q -i 10 -r 1 -g'
     cmd = base_cmd.split() + [subnet]
     output = subprocess.run(cmd, stdout=subprocess.PIPE, check=False, encoding='utf-8').stdout.split('\n')
 
@@ -69,8 +69,6 @@ Error parsing arguments.
             last_quad = ip.split('.')
             logging.debug("ip=%s, lq=%s", ip, last_quad)
             hilbert_curve.setd(last_quad[3], last_quad[3])
-
-
 
 
 

@@ -18,6 +18,7 @@ Find the longest contguous range of IP addresses in a subnet (CIDR notation)"
 ''')
 
     parser.add_argument('-v', '--verbose', action='count', help="Be verbose, (multiples okay)")
+    parser.add_argument('subnet', action='store', help="Range to enumerate and count")
 
 
     try:
@@ -35,16 +36,9 @@ Error parsing arguments.
 
     logging.debug("Begin.")
 
-    #elements = 256
-    #hilbert_curve = hilbert.Hilbert(elements)
-
-    if not remaining_args:
-        print('''Usage:  free_block.py <subnet>''')
-        sys.exit(1)
-
 
     try:
-        subnet = ipaddress.ip_network(remaining_args[0])
+        subnet = ipaddress.ip_network(parsed_options.subnet)
 
     except ValueError as exc:
         logging.error("Subnet [%s] doesn't look valid.", remaining_args[0])
@@ -77,6 +71,7 @@ Error parsing arguments.
         pack = int(free_list[i])
         last = int(free_list[i-1])
 
+        logging.debug("%s %s, %s %s, %s %s", last,pack, index, max_len, i, length)
         # sequence
         if pack == last + 1:
             length += 1
@@ -84,12 +79,19 @@ Error parsing arguments.
         # Skiped
         else:
             if length > max_len:
-                max_len = length
                 index = i - length
+                max_len = length
 
             length = 0
 
 
-    print(str(free_list[index-1]) + ' to ' + str(free_list[index+max_len]))
-    print(max_len+1)
+    first = free_list[index-1]
+    last = free_list[index+max_len-1]
+    print(str(first) + ' to ' + str(last))
+    print("Count: {}".format( max_len+1))
+
+    print("Sub-subnets in this range:")
+    for subsubnet in ipaddress.summarize_address_range(first, last):
+        print('  ' + str(subsubnet))
+
 

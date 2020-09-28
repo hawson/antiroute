@@ -45,53 +45,60 @@ Error parsing arguments.
         sys.exit(1)
 
 
-    free_list = []
+    free_list = {}
 
-    for IP in subnet.hosts():
+    hosts = list(subnet.hosts())
+
+    for IP in hosts:
         hostname = None
 
         try:
             hostname, alias, ipaddr = socket.gethostbyaddr(str(IP))
             logging.info(str(IP) + ' ' + hostname)
+            free_list[IP] = 0
             continue
 
         except socket.error:
-            free_list.append(IP)
+            free_list[IP] = 1
             logging.info(str(IP) + ' free')
 
 
 
-    length = 0
-    index = 0
 
-    tmp_list = []
-    max_len = 0
+    first = last = None
 
-    for i in range(1,len(free_list)):
-        pack = int(free_list[i])
-        last = int(free_list[i-1])
 
-        logging.debug("%s %s, %s %s, %s %s", last,pack, index, max_len, i, length)
-        # sequence
-        if pack == last + 1:
-            length += 1
+    count = 0
+    prev = 0
+    indexend = 0
+    indexcount = 0
+        #logging.debug("ip=%s: last=%s pack=%s, delta=%s max_index=%s max_length=%s, i=%s: run_index=%s run_length=%s", free_list[i], last, pack, delta, max_index, max_length, i, run_index, run_length)
 
-        # Skiped
+    for i in range(len(hosts)):
+
+        if free_list[hosts[i]] == 1:
+            count += 1
+            indexcount = i
         else:
-            if length > max_len:
-                index = i - length
-                max_len = length
+            if count > prev:
+                prev = count
+                indexend = i
+            count = 0
 
-            length = 0
+    if count > prev:
+        prev = count -1 
+        indexend = indexcount +1
 
+    first = hosts[indexend-prev]
+    last = hosts[indexend-1]
 
-    first = free_list[index-1]
-    last = free_list[index+max_len-1]
     print(str(first) + ' to ' + str(last))
-    print("Count: {}".format( max_len+1))
+    print("Count: {}".format(prev))
 
     print("Sub-subnets in this range:")
-    for subsubnet in ipaddress.summarize_address_range(first, last):
-        print('  ' + str(subsubnet))
-
+    if first != last:
+        for subsubnet in ipaddress.summarize_address_range(first, last):
+            print('  ' + str(subsubnet))
+    else:
+        print(str(first))
 

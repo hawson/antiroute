@@ -92,13 +92,14 @@ Error parsing arguments.
     first = hosts[indexend-prev]
     last = hosts[indexend-1]
 
-    print(str(first) + ' to ' + str(last))
     print("Count: {}".format(prev))
 
-    print("Sub-subnets in this range:")
-    if first != last:
-        for subsubnet in ipaddress.summarize_address_range(first, last):
-            print('  ' + str(subsubnet))
-    else:
-        print(str(first))
+    if prev > 0:
+        print(str(first) + ' to ' + str(last))
+        if first != last:
+            print("Sub-subnets in this range:")
+            for subsubnet in ipaddress.summarize_address_range(first, last):
+                print('  ' + str(subsubnet))
+        else:
+            print(str(first))
 

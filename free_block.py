@@ -9,6 +9,10 @@ import re
 import socket
 
 
+def is_free(i):
+    return free_list[hosts[i]] == 1
+
+
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(
@@ -19,6 +23,9 @@ Find the longest contguous range of IP addresses in a subnet (CIDR notation)"
 
     parser.add_argument(
         "-v", "--verbose", action="count", help="Be verbose, (multiples okay)"
+    )
+    parser.add_argument(
+        "-s", "--sort", action="count", help="sort by largest block size"
     )
     parser.add_argument("subnet", action="store", help="Range to enumerate and count")
 
@@ -57,8 +64,8 @@ Error parsing arguments.
 
         try:
             hostname, alias, ipaddr = socket.gethostbyaddr(str(IP))
-            logging.info(str(IP) + " " + hostname)
             free_list[IP] = 0
+            logging.info(str(IP) + " " + hostname)
             continue
 
         except socket.error:
@@ -73,31 +80,60 @@ Error parsing arguments.
     indexcount = 0
     # logging.debug("ip=%s: last=%s pack=%s, delta=%s max_index=%s max_length=%s, i=%s: run_index=%s run_length=%s", free_list[i], last, pack, delta, max_index, max_length, i, run_index, run_length)
 
-    for i in range(len(hosts)):
+    i = 0
+    free_count = 0
+    free_index_start = None
+    free_index_end = None
 
+    total_count = 0
+
+    free_subnets = []
+
+    while i < len(hosts) - 1 and total_count < len(hosts):
+        total_count += 1
+
+        # if is_free(i):
         if free_list[hosts[i]] == 1:
-            count += 1
-            indexcount = i
+            free_count += 1
+            if free_index_start is None:
+                free_index_start = i
+                free_index_end = i
+            else:
+                free_index_end += 1
+
         else:
-            if count > prev:
-                prev = count
-                indexend = i
-            count = 0
 
-    if count > prev:
-        prev = count - 1
-        indexend = indexcount + 1
+            if free_index_start is not None:
+                logging.debug("%d-%d", free_index_start, free_index_end)
 
-    first = hosts[indexend - prev]
-    last = hosts[indexend - 1]
+                first = hosts[free_index_start]
+                last = hosts[free_index_end]
+                for subsubnet in ipaddress.summarize_address_range(first, last):
+                    free_subnets.append(subsubnet)
 
-    print("Count: {}".format(prev))
+                free_index_start = None
+                free_index_end = None
 
-    if prev > 0:
-        print(str(first) + " to " + str(last))
-        if first != last:
-            print("Sub-subnets in this range:")
-            for subsubnet in ipaddress.summarize_address_range(first, last):
-                print("  " + str(subsubnet))
+            else:
+
+                pass
+
+        i += 1
+
+        logging.debug(
+            "iterations=%d free_count=%d %s (%s)",
+            total_count,
+            free_count,
+            hosts[i],
+            free_list[hosts[i]],
+        )
+
+    if free_subnets:
+        print("Sub-subnets in this range:")
+        if parsed_options.sort:
+            for s in sorted(free_subnets, key=lambda x: x.prefixlen, reverse=True):
+                print("  " + str(s))
+
         else:
-            print(str(first))
+            for s in free_subnets:
+                print("  " + str(s))

@@ -17,7 +17,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(
         description="""
-Find the longest contguous range of IP addresses in a subnet (CIDR notation)"
+Find the longest contguous range of free IP addresses in a subnet (CIDR notation)"
 """
     )
 
@@ -26,6 +26,9 @@ Find the longest contguous range of IP addresses in a subnet (CIDR notation)"
     )
     parser.add_argument(
         "-s", "--sort", action="count", help="sort by largest block size"
+    )
+    parser.add_argument(
+        "-r", "--reverse", action="count", help="show blocks of *used* addresses, instead of free"
     )
     parser.add_argument("subnet", action="store", help="Range to enumerate and count")
 
@@ -59,17 +62,19 @@ Error parsing arguments.
 
     hosts = list(subnet.hosts())
 
+    count_value = 1 if parsed_options.reverse else 0
+
     for IP in hosts:
         hostname = None
 
         try:
             hostname, alias, ipaddr = socket.gethostbyaddr(str(IP))
-            free_list[IP] = 0
+            free_list[IP] = count_value
             logging.info(str(IP) + " " + hostname)
             continue
 
         except socket.error:
-            free_list[IP] = 1
+            free_list[IP] = not count_value
             logging.info(str(IP) + " free")
 
     first = last = None

@@ -142,3 +142,4 @@ Error parsing arguments.
         else:
             for s in free_subnets:
                 print("  " + str(s))
+        print(f"There are {free_count} total free IPs")

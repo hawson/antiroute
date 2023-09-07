@@ -64,6 +64,9 @@ Error parsing arguments.
     if True:
         try:
             subnet = ipaddress.ip_network(remaining_args[0])
+            #subnet_list = list( map(lambda x: str(x),  subnet.hosts()) )
+            subnet_list = list( map(lambda x: str(x),  ipaddress.IPv4Network(remaining_args[0])) )
+            logging.debug(f"Subnet = {subnet}")
 
         except ValueError as exc:
             logging.error("Subnet [%s] doesn't look valid.", remaining_args[0])
@@ -71,15 +74,30 @@ Error parsing arguments.
 
         hilbert_curve = hilbert.Hilbert(subnet.num_addresses)
 
+        logging.debug(f"Subnet = {subnet}")
+        logging.debug(f"SubnetL= {subnet_list}")
         ping_output = ping_subnet(remaining_args[0])
-        logging.info(ping_output)
+        logging.info('ping_output = %s', ping_output)
 
-        for ip in ping_output:
+        offset = -1
+
+        for ip in subnet_list:
+
+            offset += 1
+
+            quads = ip.split('.')
+            blocked_offset = offset - (offset//256) * 256
+            logging.debug("ip=%s, offset=%d, blocked=%d lq=%s", ip, offset, blocked_offset, quads)
+
             if not ip:
                 continue
-            last_quad = ip.split('.')
-            logging.debug("ip=%s, lq=%s", ip, last_quad)
-            hilbert_curve.setd(last_quad[3], last_quad[3])
+
+            if ip not in ping_output:
+                continue
+
+            #hilbert_curve.setd(quads[3], quads[3])
+            hilbert_curve.setd(offset, quads[3])
+
 
 
 
@@ -89,7 +107,6 @@ Error parsing arguments.
             elements = int(remaining_args[0])
 
         pinged = map(int, remaining_args[1:])
-
 
         for ip in pinged:
             hilbert_curve.setd(ip, ip)

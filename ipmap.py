@@ -60,6 +60,8 @@ Error parsing arguments.
     #elements = 256
     #hilbert_curve = hilbert.Hilbert(elements)
 
+    total_ips = None
+    used_ips = 0
 
     if True:
         try:
@@ -67,6 +69,8 @@ Error parsing arguments.
             #subnet_list = list( map(lambda x: str(x),  subnet.hosts()) )
             subnet_list = list( map(lambda x: str(x),  ipaddress.IPv4Network(remaining_args[0])) )
             logging.debug(f"Subnet = {subnet}")
+
+            total_ips = subnet.num_addresses
 
         except ValueError as exc:
             logging.error("Subnet [%s] doesn't look valid.", remaining_args[0])
@@ -95,6 +99,8 @@ Error parsing arguments.
             if ip not in ping_output:
                 continue
 
+            used_ips += 1
+
             #hilbert_curve.setd(quads[3], quads[3])
             hilbert_curve.setd(offset, quads[3])
 
@@ -113,5 +119,6 @@ Error parsing arguments.
 
     hilbert_curve.print()
 
+    print(f"{used_ips}/{total_ips} in use")
     
 
